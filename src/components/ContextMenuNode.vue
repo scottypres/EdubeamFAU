@@ -5,6 +5,7 @@ import { useProjectStore } from '@/store/project';
 import { deleteNode, setUnsolved, solve, toggleSet } from '@/utils';
 import { computed, onMounted, ref } from 'vue';
 import { Node } from 'ts-fem';
+import { eventBus, EventType } from '@/EventBus';
 
 const projectStore = useProjectStore();
 
@@ -44,6 +45,40 @@ const angle = computed(() => {
 const node = computed(() => {
   return projectStore.solver.domain.nodes.get(projectStore.selection.label);
 });
+
+const isFixed = computed(() => {
+  return node.value.bcs.has(0) && node.value.bcs.has(2) && node.value.bcs.has(4);
+});
+
+const moveNode = () => {
+  const label = String(projectStore.selection.label);
+  projectStore.selection.type = null;
+  eventBus.emit(EventType.START_MOVE_NODE, label);
+};
+
+const toggleFix = () => {
+  const label = String(projectStore.selection.label);
+  setUnsolved();
+
+  if (isFixed.value) {
+    // Unfix: remove all BCs and remove fix constraint
+    node.value.bcs.delete(0);
+    node.value.bcs.delete(2);
+    node.value.bcs.delete(4);
+    projectStore.constraints = projectStore.constraints.filter(
+      (c) => !(c.type === 'fix' && c.targetType === 'node' && c.target === label)
+    );
+  } else {
+    // Fix: add all BCs and add fix constraint
+    node.value.bcs.add(0);
+    node.value.bcs.add(2);
+    node.value.bcs.add(4);
+    projectStore.constraints.push({ type: 'fix', targetType: 'node', target: label });
+  }
+
+  solve();
+  projectStore.selection.type = null;
+};
 
 const removeNode = () => {
   if (projectStore.selection.type !== 'node' || projectStore.selection.label === null) return;
@@ -132,6 +167,18 @@ const removeNode = () => {
         <div class="pr-2"><v-icon size="16" icon="mdi-ruler" /></div>
       </template>
       {{ $t('loads.addPrescribedDisplacement') }}
+    </v-list-item>
+    <v-list-item link class="text-body-2" @click="moveNode">
+      <template #prepend>
+        <div class="pr-2"><v-icon size="16" icon="mdi-cursor-move" /></div>
+      </template>
+      {{ $t('dialogs.editNode.move') }}
+    </v-list-item>
+    <v-list-item link class="text-body-2" @click="toggleFix">
+      <template #prepend>
+        <div class="pr-2"><v-icon size="16" :icon="isFixed ? 'mdi-lock-open' : 'mdi-lock'" /></div>
+      </template>
+      {{ isFixed ? $t('dim.unfix') : $t('dim.fix') }}
     </v-list-item>
     <v-divider v-if="projectStore.selection.type === 'node'" />
     <v-list-item v-if="projectStore.selection.type === 'node'" link class="text-body-2 text-error" @click="removeNode">

@@ -87,6 +87,7 @@
     "angle": "Angle",
     "constraints": "Constraints",
     "fix": "Fix",
+    "unfix": "Unfix",
     "straighten": "Straighten",
     "selectTwoElements": "Select two elements to constrain their angle",
     "specifyAngle": "Specify angle (°)",

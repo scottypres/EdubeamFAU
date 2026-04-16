@@ -142,7 +142,10 @@
       "sizes": "Sizes",
       "supportSize": "Support size"
     },
-    "font_size": "Font size"
+    "font_size": "Font size",
+    "theme": "Theme",
+    "darkMode": "Dark",
+    "lightMode": "Light"
   },
   "sideSettings": {
     "showDeformedShape": "Deformed shape",

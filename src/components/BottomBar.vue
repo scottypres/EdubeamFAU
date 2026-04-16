@@ -1,5 +1,5 @@
 <template>
-  <div id="bottomBar" style="border-top: 1px solid #ddd" :style="`min-height: ${props.height}px; overflow: hidden`">
+  <div id="bottomBar" style="border-top: 1px solid var(--eb-border)" :style="`min-height: ${props.height}px; overflow: hidden`">
     <div class="d-flex justify-space-between bg-primary">
       <v-tabs
         v-model="appStore.bottomBarTab"
@@ -53,7 +53,7 @@
             size="small"
             variant="flat"
             color="secondary"
-            style="border-left: 1px solid #ccc"
+            style="border-left: 1px solid var(--eb-border)"
             :rounded="0"
             @click.stop="appStore.mouseMode = MouseMode.ADD_NODE"
           >
@@ -262,7 +262,7 @@
             size="small"
             variant="flat"
             color="secondary"
-            style="border-left: 1px solid #ccc"
+            style="border-left: 1px solid var(--eb-border)"
             :rounded="0"
             @click.stop="addElementUsingMouse"
           >
@@ -500,7 +500,7 @@
             size="small"
             variant="flat"
             color="secondary"
-            style="border-left: 1px solid #ccc"
+            style="border-left: 1px solid var(--eb-border)"
             :rounded="0"
             @click.stop="if (useProjectStore().solver.domain.elements.size > 0) openModal(AddElementLoad);"
           >
@@ -975,7 +975,7 @@
             variant="flat"
             color="secondary"
             :rounded="0"
-            style="border-left: 1px solid #ccc"
+            style="border-left: 1px solid var(--eb-border)"
             @click.stop="openModal(MaterialLibraryDialog)"
           >
             <v-icon small>mdi-database-search-outline</v-icon> {{ $t('materials.material_library') }}
@@ -1095,7 +1095,7 @@
             variant="flat"
             color="secondary"
             :rounded="0"
-            style="border-left: 1px solid #ccc"
+            style="border-left: 1px solid var(--eb-border)"
             @click.stop="openModal(CrossSectionLibraryDialog)"
           >
             <v-icon small>mdi-database-search-outline</v-icon> {{ $t('materials.section_library') }}
@@ -1209,7 +1209,7 @@
             size="small"
             variant="flat"
             color="secondary"
-            style="border-left: 1px solid #ccc"
+            style="border-left: 1px solid var(--eb-border)"
             :rounded="0"
             @click="layoutStore.bottomBarResultsTab = 'elements'"
           >

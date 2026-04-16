@@ -18,6 +18,7 @@ export const useAppStore = defineStore(
   'app',
   () => {
     const inViewerMode = ref(false);
+    const darkMode = ref(false);
 
     const drawerOpen = ref(false);
     const rightDrawerOpen = ref(false);
@@ -191,6 +192,7 @@ export const useAppStore = defineStore(
 
     return {
       inViewerMode,
+      darkMode,
 
       onboardingFinished,
       drawerOpen,
@@ -235,6 +237,7 @@ export const useAppStore = defineStore(
   {
     persist: {
       pick: [
+        'darkMode',
         'panButton',
         'onboardingFinished',
         'lastSeenChangelogVersion',

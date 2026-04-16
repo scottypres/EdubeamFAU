@@ -16,9 +16,10 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import { DofID } from 'ts-fem';
 import { setLocale, availableLocales } from './plugins/i18n';
+import { useTheme } from 'vuetify';
 
 import Welcome from '@/components/dialogs/Welcome.vue';
 import Share from '@/components/dialogs/Share.vue';
@@ -36,6 +37,7 @@ import { eventBus, EventType } from './EventBus';
 const { t } = useI18n();
 
 const viewerStore = useViewerStore();
+const theme = useTheme();
 
 const onboardingWrapper = ref(null);
 provide('onboardingWrapper', onboardingWrapper);
@@ -247,6 +249,15 @@ onMounted(() => {
   setLocale(appStore.locale);
 });
 
+// Sync dark mode preference with Vuetify theme
+watch(
+  () => appStore.darkMode,
+  (dark) => {
+    theme.global.name.value = dark ? 'dark' : 'light';
+  },
+  { immediate: true }
+);
+
 function preventDefaults(e) {
   e.preventDefault();
 }
@@ -388,6 +399,10 @@ const app_commit = APP_COMMIT;
       </v-btn>
 
       <v-spacer></v-spacer>
+
+      <v-btn icon @click="appStore.darkMode = !appStore.darkMode">
+        <v-icon>{{ appStore.darkMode ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
+      </v-btn>
 
       <v-btn class="d-none d-sm-inline-flex" @click="openChangelog">
         <v-icon class="mr-1">mdi-history</v-icon>
@@ -531,11 +546,12 @@ svg text {
 
 .tooltip .content {
   position: relative;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--eb-bg);
+  opacity: 0.95;
   z-index: 100;
   padding: 3px 8px;
   //font-weight: bold;
-  box-shadow: 1px 1px 1px #ddd;
+  box-shadow: 1px 1px 1px var(--eb-border);
 }
 
 .tooltip .content:after {
@@ -545,7 +561,7 @@ svg text {
   border-bottom: 6px solid transparent;
   left: -6px;
   top: 8px;
-  border-right: 6px solid rgba(255, 255, 255, 0.9);
+  border-right: 6px solid var(--eb-bg);
   z-index: 1000;
 }
 

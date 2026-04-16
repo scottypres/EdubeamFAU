@@ -1,4 +1,20 @@
 <template>
+  <div>
+    <div class="pa-3 mb-2">
+      <h3 class="mb-2">{{ $t('settings.theme') }}</h3>
+      <v-btn-toggle v-model="appStore.darkMode" mandatory density="compact" color="primary">
+        <v-btn :value="false">
+          <v-icon start>mdi-white-balance-sunny</v-icon>
+          {{ $t('settings.lightMode') }}
+        </v-btn>
+        <v-btn :value="true">
+          <v-icon start>mdi-moon-waning-crescent</v-icon>
+          {{ $t('settings.darkMode') }}
+        </v-btn>
+      </v-btn-toggle>
+    </div>
+    <v-divider />
+  </div>
   <div class="d-flex">
     <div class="v-col-6">
       <h3 class="mb-2">{{ $t('settings.viewer_preview') }}</h3>
@@ -266,12 +282,14 @@
 <script lang="ts" setup>
 import { useProjectStore } from '@/store/project';
 import { useViewerStore } from '@/store/viewer';
+import { useAppStore } from '@/store/app';
 import SVGElementViewer from '../SVGElementViewer.vue';
 import { LinearStaticSolver, DofID } from 'ts-fem';
 import { ref, onMounted } from 'vue';
 
 const viewerStore = useViewerStore();
 const projectStore = useProjectStore();
+const appStore = useAppStore();
 const showQuantity = ref('deformedShape');
 
 const solver = ref(new LinearStaticSolver());

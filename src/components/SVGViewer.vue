@@ -2343,7 +2343,7 @@ defineExpose({ centerContent, fitContent });
         </div>
       </div>
       <div class="text-right text-sm-body-2">
-        <button class="text-decoration-underline bg-white" @click="appStore.openSettings()">
+        <button class="text-decoration-underline" style="background: transparent" @click="appStore.openSettings()">
           {{ $t('sideSettings.more_settings') }}
         </button>
       </div>
@@ -2425,7 +2425,7 @@ defineExpose({ centerContent, fitContent });
   .element.element-1d {
     polyline {
       fill: none;
-      stroke: black;
+      stroke: var(--eb-svg-stroke);
       stroke-width: 2px;
 
       &.handle {
@@ -2441,7 +2441,7 @@ defineExpose({ centerContent, fitContent });
 
     &:hover {
       & polyline.drawable {
-        stroke: black;
+        stroke: var(--eb-svg-stroke-hover);
         stroke-width: 5px;
       }
     }
@@ -2504,7 +2504,7 @@ defineExpose({ centerContent, fitContent });
 
   .node {
     polyline {
-      stroke: #000;
+      stroke: var(--eb-svg-stroke);
       stroke-linecap: square;
       stroke-width: 6px;
       vector-effect: non-scaling-stroke;
@@ -2526,7 +2526,7 @@ defineExpose({ centerContent, fitContent });
     }
 
     &:hover polyline.drawable {
-      stroke: black;
+      stroke: var(--eb-svg-stroke-hover);
       stroke-width: 10px;
     }
 

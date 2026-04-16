@@ -440,7 +440,7 @@ const emit = defineEmits(['nodemousemove', 'nodepointerup', 'nodedefomousemove']
         :font-size="fontSize / scale"
         font-weight="normal"
         text-anchor="middle"
-        dominant-baseline="central"
+        dy="0.35em"
       >
         {{ node.label }}
       </text>

@@ -110,7 +110,7 @@ import { useProjectStore } from '../../store/project';
 import { DofID, NodalLoad } from 'ts-fem';
 import { closeModal, openModal } from 'jenesius-vue-modal';
 import { useAppStore } from '@/store/app';
-import { checkNumber } from '@/utils';
+import { checkNumber, hasDuplicateElement } from '@/utils';
 import { onMounted } from 'vue';
 import AddMaterialDialog from './AddMaterial.vue';
 import AddCrossSectionDialog from './AddCrossSection.vue';
@@ -146,10 +146,16 @@ const addElement = () => {
     return alert('Please select a material and cross section');
   }
 
+  if (newElementFrom.value === newElementTo.value) {
+    return alert('Start and end node must be different');
+  }
+
+  if (hasDuplicateElement(String(newElementFrom.value), String(newElementTo.value))) {
+    return alert('An element already exists between these two nodes');
+  }
+
   useProjectStore().solver.loadCases[0].solved = false;
   const domain = useProjectStore().solver.domain;
-
-  //if (domain.elements.has(999)) return alert("Element id 999 already exists");
 
   let nid = domain.elements.size + 1;
 

@@ -298,7 +298,7 @@ import { ref } from 'vue';
 import { useProjectStore } from '../store/project';
 import { useAppStore } from '../store/app';
 import { DofID } from 'ts-fem';
-import { setUnsolved } from '../utils/index';
+import { setUnsolved, hasDuplicateElement } from '../utils/index';
 
 const newNodeX = ref(0.0);
 const newNodeZ = ref(0.0);
@@ -337,7 +337,8 @@ const addNode = () => {
 const addElement = () => {
   const domain = useProjectStore().solver.domain;
 
-  //if (domain.elements.has(999)) return alert("Element id 999 already exists");
+  if (String(newElementFrom.value) === String(newElementTo.value)) return;
+  if (hasDuplicateElement(String(newElementFrom.value), String(newElementTo.value))) return;
 
   const nid = domain.elements.size + 1;
 

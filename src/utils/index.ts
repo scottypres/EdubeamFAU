@@ -594,6 +594,19 @@ export const toggleBoolean = (item: unknown, value: string) => {
   solve();
 };
 
+/** Check if an element already exists between the two given nodes (in either direction) */
+export const hasDuplicateElement = (node1: string, node2: string): boolean => {
+  for (const el of useProjectStore().solver.domain.elements.values()) {
+    if (
+      (el.nodes[0] === node1 && el.nodes[1] === node2) ||
+      (el.nodes[0] === node2 && el.nodes[1] === node1)
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const deleteElement = (id: string) => {
   setUnsolved();
 

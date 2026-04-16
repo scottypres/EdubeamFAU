@@ -428,9 +428,11 @@ const emit = defineEmits(['nodemousemove', 'nodepointerup', 'nodedefomousemove']
         :cx="node.coords[0]"
         :cy="node.coords[2]"
         :r="(1 + (fontSize / 2) * (1 + Math.pow(node.label.toString().length - 1, 1.7) * 0.3)) / scale"
-        fill="rgba(255, 255, 255, 0.8)"
-        stroke="black"
+        :fill="'var(--eb-svg-endpoint-fill)'"
+        :stroke="'var(--eb-svg-stroke)'"
+        stroke-width="0.5"
         vector-effect="non-scaling-stroke"
+        opacity="0.9"
       ></circle>
       <text
         :x="node.coords[0]"

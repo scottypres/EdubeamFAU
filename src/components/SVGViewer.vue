@@ -28,7 +28,7 @@ import SVGElementTemperatureLoad from './svg/ElementTemperatureLoad.vue';
 import SVGDimensioning from './svg/Dimensioning.vue';
 
 import { formatExpValueAsHTML } from '../SVGUtils';
-import { loadType, throttle } from '../utils';
+import { loadType, throttle, hasDuplicateElement } from '../utils';
 import { createDimensionId, ensureDimensionId } from '@/utils/id';
 import {
   Node,
@@ -1269,9 +1269,19 @@ const onMouseDown = (e: PointerEvent) => {
 
         const nid = startNode.value.label;
         if (nid === null || intersected.value.index === null) return;
+
+        // Prevent duplicate or self-referencing elements
+        const fromNode = String(nid);
+        const toNode = String(intersected.value.index);
+        if (fromNode === toNode || hasDuplicateElement(fromNode, toNode)) {
+          const n = projectStore.solver.domain.nodes.get(intersected.value.index as string)!;
+          startNode.value = { label: intersected.value.index, x: n.coords[0], y: n.coords[2] };
+          return;
+        }
+
         const mat = [...useProjectStore().solver.domain.materials.values()][0].label;
         const cs = [...useProjectStore().solver.domain.crossSections.values()][0].label;
-        projectStore.solver.domain.createBeam2D(newElId, [String(nid), String(intersected.value.index)], mat, cs);
+        projectStore.solver.domain.createBeam2D(newElId, [fromNode, toNode], mat, cs);
 
         const n = projectStore.solver.domain.nodes.get(intersected.value.index as string)!;
         startNode.value = { label: intersected.value.index, x: n.coords[0], y: n.coords[2] };

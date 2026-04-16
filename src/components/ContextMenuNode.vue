@@ -47,7 +47,10 @@ const node = computed(() => {
 });
 
 const isFixed = computed(() => {
-  return node.value.bcs.has(0) && node.value.bcs.has(2) && node.value.bcs.has(4);
+  const label = String(projectStore.selection.label);
+  return projectStore.constraints.some(
+    (c) => c.type === 'fix' && c.targetType === 'node' && c.target === label
+  );
 });
 
 const moveNode = () => {
@@ -58,25 +61,17 @@ const moveNode = () => {
 
 const toggleFix = () => {
   const label = String(projectStore.selection.label);
-  setUnsolved();
 
   if (isFixed.value) {
-    // Unfix: remove all BCs and remove fix constraint
-    node.value.bcs.delete(0);
-    node.value.bcs.delete(2);
-    node.value.bcs.delete(4);
+    // Unfix: remove fix constraint
     projectStore.constraints = projectStore.constraints.filter(
       (c) => !(c.type === 'fix' && c.targetType === 'node' && c.target === label)
     );
   } else {
-    // Fix: add all BCs and add fix constraint
-    node.value.bcs.add(0);
-    node.value.bcs.add(2);
-    node.value.bcs.add(4);
+    // Fix: add fix constraint (viewport-only, does not affect BCs/solver)
     projectStore.constraints.push({ type: 'fix', targetType: 'node', target: label });
   }
 
-  solve();
   projectStore.selection.type = null;
 };
 

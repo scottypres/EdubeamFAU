@@ -1820,8 +1820,6 @@ const constraintAngleInput = ref('90');
 
 const removeConstraint = (index: number) => {
   projStore.constraints.splice(index, 1);
-  setUnsolved();
-  solve();
 };
 
 const enterConstraintMode = (mode: 'angle' | 'fix' | 'straighten') => {
@@ -1836,6 +1834,8 @@ const cancelConstraintMode = () => {
 };
 
 const applyConstraint = () => {
+  let geometryChanged = false;
+
   if (constraintMode.value === 'angle') {
     const elements = projStore.selection2.elements;
     if (elements.length !== 2) return;
@@ -1862,6 +1862,7 @@ const applyConstraint = () => {
       const targetAngle = angle1 + (angle * Math.PI) / 180;
       n2b.coords[0] = n2a.coords[0] + len2 * Math.cos(targetAngle);
       n2b.coords[2] = n2a.coords[2] + len2 * Math.sin(targetAngle);
+      geometryChanged = true;
     }
   } else if (constraintMode.value === 'fix') {
     const nodes = projStore.selection2.nodes;
@@ -1869,24 +1870,10 @@ const applyConstraint = () => {
     if (nodes.length === 0 && elements.length === 0) return;
 
     for (const nodeLabel of nodes) {
-      const node = projStore.solver.domain.nodes.get(nodeLabel);
-      if (!node) continue;
-      node.bcs.add(0);
-      node.bcs.add(2);
-      node.bcs.add(4);
       projStore.constraints.push({ type: 'fix', targetType: 'node', target: nodeLabel });
     }
 
     for (const elLabel of elements) {
-      const el = projStore.solver.domain.getElement(elLabel) as Beam2D;
-      if (!el) continue;
-      for (const nLabel of el.nodes) {
-        const node = projStore.solver.domain.nodes.get(nLabel);
-        if (!node) continue;
-        node.bcs.add(0);
-        node.bcs.add(2);
-        node.bcs.add(4);
-      }
       projStore.constraints.push({ type: 'fix', targetType: 'element', target: elLabel });
     }
   } else if (constraintMode.value === 'straighten') {
@@ -1911,11 +1898,16 @@ const applyConstraint = () => {
         n2.coords[2] = n1.coords[2];
         projStore.constraints.push({ type: 'straighten', target: elLabel, orientation: 'horizontal' });
       }
+      geometryChanged = true;
     }
   }
 
-  setUnsolved();
-  solve();
+  // Only re-solve if node positions changed (angle/straighten move nodes)
+  if (geometryChanged) {
+    setUnsolved();
+    solve();
+  }
+
   constraintMode.value = null;
   projStore.clearSelection2();
 };

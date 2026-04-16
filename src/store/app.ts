@@ -167,7 +167,7 @@ export const useAppStore = defineStore(
     > = ref([
       { title: 'tabView.viewer', component: markRaw(SVGViewer), props: { id: 'viewer' }, closable: false },
       //{ title: "tabView.results", component: markRaw(Results), props: {}, closable: true },
-      { title: 'tabView.settings', component: markRaw(Settings), props: { id: 'settings' }, closable: true },
+      { title: 'tabView.settings', component: markRaw(Settings), props: { id: 'settings' }, closable: false },
     ]);
 
     const openedTab = computed(() => tabs.value[tab.value] || null);

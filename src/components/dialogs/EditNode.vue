@@ -102,6 +102,9 @@
       </v-card-text>
 
       <v-card-actions>
+        <v-btn color="blue darken-1" prepend-icon="mdi-cursor-move" @click="startMove">
+          {{ $t('dialogs.editNode.move') }}
+        </v-btn>
         <v-spacer></v-spacer>
         <v-btn color="green darken-1" @click="edit" @keydown.enter="edit">
           {{ $t('dialogs.editNode.editNode') }}
@@ -123,6 +126,7 @@ import { useAppStore } from '@/store/app';
 import { checkNumber, parseFloat2, setUnsolved, solve, toggleSet } from '@/utils';
 import SupportHelper from '../svg/SupportHelper.vue';
 import { numberRules } from '../../utils';
+import { eventBus, EventType } from '@/EventBus';
 
 const projectStore = useProjectStore();
 const appStore = useAppStore();
@@ -175,6 +179,11 @@ const angle = computed(() => {
 const node = computed(() => {
   return projectStore.solver.domain.nodes.get(props.label);
 });
+
+const startMove = () => {
+  closeModal();
+  eventBus.emit(EventType.START_MOVE_NODE, props.label);
+};
 
 const edit = () => {
   if (!valid.value) return;

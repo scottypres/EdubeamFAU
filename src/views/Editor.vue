@@ -2,7 +2,7 @@
   <div class="d-flex flex-column fill-height">
     <div style="height: 100%; width: 100%; position: absolute; pointer-events: none">
       <TransitionGroup name="fade">
-        <Widget v-for="widget of layoutStore.widgets" :key="widget.title" :widget="widget" />
+        <Widget v-for="widget of layoutStore.widgets" :key="widget.id" :widget="widget" />
       </TransitionGroup>
     </div>
     <HelloWorld class="fill-height" style="min-height: 0" />

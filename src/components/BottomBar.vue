@@ -961,6 +961,64 @@
       </v-window-item>
 
       <v-window-item
+        :value="'tab-dim'"
+        :style="`height: ${props.height - 36}px`"
+        :transition="false"
+        :reverse-transition="false"
+        @touchstart.stop
+      >
+        <div class="border-b border-t">
+          <v-btn size="small" variant="flat" color="secondary" :rounded="0" @click.stop="startAngleConstraint">
+            <v-icon small class="mr-1">mdi-angle-acute</v-icon> {{ $t('dim.angle') }}
+          </v-btn>
+          <v-btn size="small" variant="flat" color="secondary" :rounded="0" @click.stop="startFixConstraint">
+            <v-icon small class="mr-1">mdi-lock</v-icon> {{ $t('dim.fix') }}
+          </v-btn>
+          <v-btn size="small" variant="flat" color="secondary" :rounded="0" @click.stop="startStraightenConstraint">
+            <v-icon small class="mr-1">mdi-format-vertical-align-center</v-icon> {{ $t('dim.straighten') }}
+          </v-btn>
+        </div>
+        <div :style="`height: ${props.height - 36 - 36}px; overflow-y: auto`">
+          <v-table v-if="projStore.constraints.length > 0" density="compact" class="text-body-2 fixed-left-col">
+            <thead>
+              <tr>
+                <th>{{ $t('common.type') }}</th>
+                <th>{{ $t('common.target') }}</th>
+                <th>{{ $t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(constraint, index) in projStore.constraints" :key="index">
+                <td>
+                  <v-icon v-if="constraint.type === 'angle'" size="small" class="mr-1">mdi-angle-acute</v-icon>
+                  <v-icon v-else-if="constraint.type === 'fix'" size="small" class="mr-1">mdi-lock</v-icon>
+                  <v-icon v-else-if="constraint.type === 'straighten'" size="small" class="mr-1">mdi-format-vertical-align-center</v-icon>
+                  {{ $t(`dim.${constraint.type}`) }}
+                </td>
+                <td>
+                  <template v-if="constraint.type === 'angle'">
+                    {{ $t('common.elements') }}: {{ constraint.elements[0] }}, {{ constraint.elements[1] }} — {{ constraint.angle }}°
+                  </template>
+                  <template v-else-if="constraint.type === 'fix'">
+                    {{ $t(`common.${constraint.targetType}`) }}: {{ constraint.target }}
+                  </template>
+                  <template v-else-if="constraint.type === 'straighten'">
+                    {{ $t('common.element') }}: {{ constraint.target }} → {{ constraint.orientation }}
+                  </template>
+                </td>
+                <td>
+                  <v-btn density="compact" variant="text" icon="mdi-close" @click="removeConstraint(index)"></v-btn>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+          <div v-else class="pa-4 text-center text-grey">
+            {{ $t('dim.noConstraints') }}
+          </div>
+        </div>
+      </v-window-item>
+
+      <v-window-item
         :value="'tab-mats'"
         :style="`height: ${props.height - 36}px`"
         :transition="false"
@@ -1693,6 +1751,127 @@ const addElementUsingMouse = () => {
   appStore.mouseMode = MouseMode.ADD_ELEMENT;
 };
 
+// Constraint functions
+const removeConstraint = (index: number) => {
+  projStore.constraints.splice(index, 1);
+  setUnsolved();
+  solve();
+};
+
+const startAngleConstraint = () => {
+  const elements = projStore.selection2.elements;
+  if (elements.length !== 2) {
+    alert(t('dim.selectTwoElements'));
+    return;
+  }
+
+  const angleStr = prompt(t('dim.specifyAngle'));
+  if (angleStr === null) return;
+
+  const angle = parseFloat(angleStr);
+  if (isNaN(angle)) return;
+
+  projStore.constraints.push({ type: 'angle', elements: [elements[0], elements[1]], angle });
+
+  // Apply the angle constraint: rotate the second element to match the target angle relative to the first
+  const domain = projStore.solver.domain;
+  const el1 = domain.getElement(elements[0]) as Beam2D;
+  const el2 = domain.getElement(elements[1]) as Beam2D;
+  if (!el1 || !el2) return;
+
+  const n1a = domain.nodes.get(el1.nodes[0])!;
+  const n1b = domain.nodes.get(el1.nodes[1])!;
+  const angle1 = Math.atan2(n1b.coords[2] - n1a.coords[2], n1b.coords[0] - n1a.coords[0]);
+
+  const n2a = domain.nodes.get(el2.nodes[0])!;
+  const n2b = domain.nodes.get(el2.nodes[1])!;
+  const len2 = Math.sqrt(
+    Math.pow(n2b.coords[0] - n2a.coords[0], 2) + Math.pow(n2b.coords[2] - n2a.coords[2], 2)
+  );
+
+  const targetAngle = angle1 + (angle * Math.PI) / 180;
+  // Move the end node of element 2 to satisfy the angle
+  n2b.coords[0] = n2a.coords[0] + len2 * Math.cos(targetAngle);
+  n2b.coords[2] = n2a.coords[2] + len2 * Math.sin(targetAngle);
+
+  setUnsolved();
+  solve();
+};
+
+const startFixConstraint = () => {
+  const nodes = projStore.selection2.nodes;
+  const elements = projStore.selection2.elements;
+
+  if (nodes.length === 0 && elements.length === 0) {
+    alert(t('dim.selectNodeOrElement'));
+    return;
+  }
+
+  // Fix selected nodes
+  for (const nodeLabel of nodes) {
+    const node = projStore.solver.domain.nodes.get(nodeLabel);
+    if (!node) continue;
+
+    node.bcs.add(0); // Dx
+    node.bcs.add(2); // Dz
+    node.bcs.add(4); // Ry
+    projStore.constraints.push({ type: 'fix', targetType: 'node', target: nodeLabel });
+  }
+
+  // Fix selected elements (fix both end nodes)
+  for (const elLabel of elements) {
+    const el = projStore.solver.domain.getElement(elLabel) as Beam2D;
+    if (!el) continue;
+
+    for (const nLabel of el.nodes) {
+      const node = projStore.solver.domain.nodes.get(nLabel);
+      if (!node) continue;
+      node.bcs.add(0);
+      node.bcs.add(2);
+      node.bcs.add(4);
+    }
+    projStore.constraints.push({ type: 'fix', targetType: 'element', target: elLabel });
+  }
+
+  setUnsolved();
+  solve();
+};
+
+const startStraightenConstraint = () => {
+  const elements = projStore.selection2.elements;
+
+  if (elements.length === 0) {
+    alert(t('dim.selectElement'));
+    return;
+  }
+
+  const domain = projStore.solver.domain;
+
+  for (const elLabel of elements) {
+    const el = domain.getElement(elLabel) as Beam2D;
+    if (!el) continue;
+
+    const n1 = domain.nodes.get(el.nodes[0])!;
+    const n2 = domain.nodes.get(el.nodes[1])!;
+
+    const dx = Math.abs(n2.coords[0] - n1.coords[0]);
+    const dz = Math.abs(n2.coords[2] - n1.coords[2]);
+
+    if (dx <= dz) {
+      // Closer to vertical — align x
+      n2.coords[0] = n1.coords[0];
+      projStore.constraints.push({ type: 'straighten', target: elLabel, orientation: 'vertical' });
+    } else {
+      // Closer to horizontal — align z
+      n2.coords[2] = n1.coords[2];
+      projStore.constraints.push({ type: 'straighten', target: elLabel, orientation: 'horizontal' });
+    }
+  }
+
+  setUnsolved();
+  solve();
+};
+
 const tabs = reactive([
   {
     id: 'nodes',
@@ -1714,6 +1893,12 @@ const tabs = reactive([
       projStore.solver.loadCases[0].nodalLoadList.length +
       projStore.solver.loadCases[0].elementLoadList.length +
       projStore.solver.loadCases[0].prescribedBC.length,
+  },
+  {
+    id: 'dim',
+    title: 'tabs.dim',
+    icon: 'mdi-ruler-square',
+    count: () => projStore.constraints.length,
   },
   { id: 'mats', title: 'tabs.materials', icon: 'mdi-texture-box', count: () => projStore.solver.domain.materials.size },
   {

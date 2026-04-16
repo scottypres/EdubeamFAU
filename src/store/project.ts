@@ -282,6 +282,13 @@ export const useProjectStore = defineStore(
 
     const dimensions = ref<DimensionLine[]>([]);
 
+    type Constraint =
+      | { type: 'angle'; elements: [string, string]; angle: number }
+      | { type: 'fix'; targetType: 'node' | 'element'; target: string }
+      | { type: 'straighten'; target: string; orientation: 'vertical' | 'horizontal' };
+
+    const constraints = ref<Constraint[]>([]);
+
     return {
       solve,
       model,
@@ -306,6 +313,7 @@ export const useProjectStore = defineStore(
       materials,
       crossSections,
       dimensions,
+      constraints,
     };
   },
   {

@@ -205,14 +205,22 @@ const resetAndFit = () => {
   });
 };
 
+const startMoveNode = (label: string) => {
+  intersected.value.index = label;
+  intersected.value.type = 'node';
+  appStore.mouseMode = MouseMode.MOVING;
+};
+
 onMounted(() => {
   window.addEventListener('keydown', zoom);
   eventBus.on(EventType.FIT_CONTENT, resetAndFit);
+  eventBus.on(EventType.START_MOVE_NODE, startMoveNode);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', zoom);
   eventBus.off(EventType.FIT_CONTENT, resetAndFit);
+  eventBus.off(EventType.START_MOVE_NODE, startMoveNode);
 });
 
 onMounted(() => {
@@ -1757,6 +1765,16 @@ defineExpose({ centerContent, fitContent });
       </v-btn>
     </div>
     <div id="viewerControls" class="text-black d-flex" style="position: absolute; z-index: 100; top: 24px; right: 24px">
+      <v-btn
+        :icon="viewerStore.snapToGrid ? 'mdi:mdi-magnet-on' : 'mdi:mdi-magnet'"
+        size="32"
+        density="comfortable"
+        class="mr-1"
+        rounded="lg"
+        :title="$t('settings.snap_to_grid')"
+        :color="viewerStore.snapToGrid ? 'primary' : 'default'"
+        @click="viewerStore.snapToGrid = !viewerStore.snapToGrid"
+      ></v-btn>
       <v-btn
         icon="mdi:mdi-image-filter-center-focus"
         size="32"

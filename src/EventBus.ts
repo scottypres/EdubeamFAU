@@ -35,6 +35,7 @@ class EventBus {
 
 export const enum EventType {
   FIT_CONTENT = 'FIT_CONTENT',
+  START_MOVE_NODE = 'START_MOVE_NODE',
 }
 
 export const eventBus = new EventBus();

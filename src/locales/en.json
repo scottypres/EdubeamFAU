@@ -80,7 +80,22 @@
     "loads": "Loads",
     "materials": "Materials",
     "crossSections": "Cross sections",
-    "results": "Results"
+    "results": "Results",
+    "dim": "Dim"
+  },
+  "dim": {
+    "angle": "Angle",
+    "constraints": "Constraints",
+    "fix": "Fix",
+    "straighten": "Straighten",
+    "selectTwoElements": "Select two elements to constrain their angle",
+    "specifyAngle": "Specify angle (°)",
+    "apply": "Apply",
+    "fixDescription": "Fix a node or element in place",
+    "straightenDescription": "Snap element to nearest vertical or horizontal",
+    "selectElement": "Select an element",
+    "selectNodeOrElement": "Select a node or element",
+    "noConstraints": "No constraints defined yet."
   },
   "crossSection": {
     "area": "Area",
@@ -225,7 +240,8 @@
       "text2": "If you wish to keep your current progress, you can cancel the update."
     },
     "editNode": {
-      "editNode": "Edit node"
+      "editNode": "Edit node",
+      "move": "Move"
     },
     "changelog": {
       "title": "What's New?",

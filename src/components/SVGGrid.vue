@@ -8,6 +8,14 @@
         :d="gridPath"
         :transform="`translate(${gridTX} ${gridTY})`"
       />
+      <path
+        v-if="originPath"
+        :stroke="appStore.darkMode ? '#666' : '#999'"
+        vector-effect="non-scaling-stroke"
+        stroke-dasharray="6 4"
+        :d="originPath"
+        :transform="`translate(${gridTX} ${gridTY})`"
+      />
     </g>
 
     <g class="grid">
@@ -54,6 +62,7 @@ const props = withDefaults(
 );
 
 const gridPath = ref('');
+const originPath = ref('');
 const xGridTexts = ref<{ x: number; y: number; value: number }[]>([]);
 const yGridTexts = ref<{ x: number; y: number; value: number; angle: number }[]>([]);
 const gridTX = ref(0);
@@ -114,6 +123,7 @@ const refreshGrid = (isZooming = false) => {
   if (!isZooming) return;
 
   let path = '';
+  let origin = '';
 
   const _xGridTexts = [];
   const _yGridTexts = [];
@@ -125,7 +135,13 @@ const refreshGrid = (isZooming = false) => {
     const x2 = x1; //stepW;
     const y2 = rightBottom.y - leftTop.y - gridTY.value;
 
-    path += `M ${x1},${y1 - 1000} L ${x2},${1000 + y2} `;
+    const worldX = v + trueOffsetX.value;
+    const segment = `M ${x1},${y1 - 1000} L ${x2},${1000 + y2} `;
+    if (Math.abs(worldX) < 1e-8) {
+      origin += segment;
+    } else {
+      path += segment;
+    }
 
     _xGridTexts.push({
       x: x1,
@@ -147,7 +163,13 @@ const refreshGrid = (isZooming = false) => {
     const x2 = 1000 + rightBottom.x - leftTop.x - gridTX.value;
     const y2 = y1; //stepW;
 
-    path += `M ${x1},${y1} L ${x2},${y2} `;
+    const worldY = v + trueOffsetY.value;
+    const segment = `M ${x1},${y1} L ${x2},${y2} `;
+    if (Math.abs(worldY) < 1e-8) {
+      origin += segment;
+    } else {
+      path += segment;
+    }
 
     _yGridTexts.push({
       x: 10,
@@ -168,6 +190,7 @@ const refreshGrid = (isZooming = false) => {
   yGridTexts.value = _yGridTexts;
 
   gridPath.value = path;
+  originPath.value = origin;
 };
 
 defineExpose({ refreshGrid });

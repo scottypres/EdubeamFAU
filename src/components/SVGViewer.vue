@@ -2385,11 +2385,6 @@ defineExpose({ centerContent, fitContent });
           />
         </div>
       </div>
-      <div class="text-right text-sm-body-2">
-        <button class="text-decoration-underline" style="background: transparent" @click="appStore.openSettings()">
-          {{ $t('sideSettings.more_settings') }}
-        </button>
-      </div>
     </div>
   </div>
 </template>

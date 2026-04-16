@@ -238,6 +238,7 @@ export const useAppStore = defineStore(
     persist: {
       pick: [
         'darkMode',
+        'bottomBarOpen',
         'panButton',
         'onboardingFinished',
         'lastSeenChangelogVersion',

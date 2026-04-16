@@ -317,28 +317,35 @@ export const useProjectStore = defineStore(
     };
   },
   {
-    persist: {
-      pick: ['solver', 'dimensions', '_solver'],
-      serializer: {
-        serialize: (value) => {
-          return serializeModel(value.solver, value.dimensions);
+    persist: [
+      {
+        key: 'project',
+        pick: ['solver', 'dimensions', '_solver'],
+        serializer: {
+          serialize: (value) => {
+            return serializeModel(value.solver, value.dimensions);
+          },
+          deserialize: (value) => {
+            console.log(value);
+            if (value === undefined) return { _solver: '' };
+            return { _solver: value };
+          },
         },
-        deserialize: (value) => {
-          console.log(value);
-          if (value === undefined) return { _solver: '' };
-          return { _solver: value };
-        },
-      },
-      afterHydrate: (ctx) => {
-        // console.log(ctx.store.$state);
-        if (ctx.store._solver === '') return;
+        afterHydrate: (ctx) => {
+          // console.log(ctx.store.$state);
+          if (ctx.store._solver === '') return;
 
-        try {
-          deserializeModel(ctx.store._solver, ctx.store.solver, ctx.store.dimensions);
-        } catch (e) {
-          console.error(e);
-        }
+          try {
+            deserializeModel(ctx.store._solver, ctx.store.solver, ctx.store.dimensions);
+          } catch (e) {
+            console.error(e);
+          }
       },
-    },
+      },
+      {
+        key: 'project-constraints',
+        pick: ['constraints'],
+      },
+    ],
   }
 );

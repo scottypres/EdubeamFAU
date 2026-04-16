@@ -72,6 +72,28 @@ const trueOffsetY = ref(0);
 const csLeft = ref(0);
 const csTop = ref(0);
 
+// Cached values needed for origin line recomputation during pan
+let cachedGridZoomW = 1;
+let cachedGridZoomH = 1;
+let cachedViewWidth = 0;
+let cachedViewHeight = 0;
+
+const recomputeOriginPath = () => {
+  let origin = '';
+
+  // Vertical origin line (world x=0): position in local grid coords is -trueOffsetX
+  const originLocalX = -trueOffsetX.value;
+  const originPixelX = cachedGridZoomW * originLocalX;
+  origin += `M ${originPixelX},${-5000} L ${originPixelX},${5000 + cachedViewHeight} `;
+
+  // Horizontal origin line (world y=0): position in local grid coords is -trueOffsetY
+  const originLocalY = -trueOffsetY.value;
+  const originPixelY = cachedGridZoomH * originLocalY;
+  origin += `M ${-5000},${originPixelY} L ${5000 + cachedViewWidth},${originPixelY} `;
+
+  originPath.value = origin;
+};
+
 const refreshGrid = (isZooming = false) => {
   if (props.viewport === undefined) return;
   const matrix = props.viewport.getCTM() as DOMMatrix;
@@ -116,6 +138,15 @@ const refreshGrid = (isZooming = false) => {
   gridTX.value = props.zoom * -offsetX;
   gridTY.value = props.zoom * -offsetY;
 
+  // Cache values for origin line computation
+  cachedGridZoomW = gridZoomW;
+  cachedGridZoomH = gridZoomH;
+  cachedViewWidth = rightBottom.x - leftTop.x;
+  cachedViewHeight = rightBottom.y - leftTop.y;
+
+  // Always recompute origin lines (even during pan)
+  recomputeOriginPath();
+
   // const stepPx = stepW * gridZoomW;
 
   const tickCountY = Math.ceil(h / stepW) + 1;
@@ -123,7 +154,6 @@ const refreshGrid = (isZooming = false) => {
   if (!isZooming) return;
 
   let path = '';
-  let origin = '';
 
   const _xGridTexts = [];
   const _yGridTexts = [];
@@ -135,13 +165,7 @@ const refreshGrid = (isZooming = false) => {
     const x2 = x1; //stepW;
     const y2 = rightBottom.y - leftTop.y - gridTY.value;
 
-    const worldX = v + trueOffsetX.value;
-    const segment = `M ${x1},${y1 - 1000} L ${x2},${1000 + y2} `;
-    if (Math.abs(worldX) < 1e-8) {
-      origin += segment;
-    } else {
-      path += segment;
-    }
+    path += `M ${x1},${y1 - 1000} L ${x2},${1000 + y2} `;
 
     _xGridTexts.push({
       x: x1,
@@ -163,13 +187,7 @@ const refreshGrid = (isZooming = false) => {
     const x2 = 1000 + rightBottom.x - leftTop.x - gridTX.value;
     const y2 = y1; //stepW;
 
-    const worldY = v + trueOffsetY.value;
-    const segment = `M ${x1},${y1} L ${x2},${y2} `;
-    if (Math.abs(worldY) < 1e-8) {
-      origin += segment;
-    } else {
-      path += segment;
-    }
+    path += `M ${x1},${y1} L ${x2},${y2} `;
 
     _yGridTexts.push({
       x: 10,
@@ -190,7 +208,6 @@ const refreshGrid = (isZooming = false) => {
   yGridTexts.value = _yGridTexts;
 
   gridPath.value = path;
-  originPath.value = origin;
 };
 
 defineExpose({ refreshGrid });

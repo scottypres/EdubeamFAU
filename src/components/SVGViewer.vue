@@ -1737,7 +1737,7 @@ defineExpose({ centerContent, fitContent });
         class="mr-1"
         rounded="lg"
         title="Undo"
-        @click.native="undoRedoManager.undo()"
+        @click="undoRedoManager.undo()"
       ></v-btn>
       <v-btn
         icon="mdi:mdi-redo"
@@ -1746,7 +1746,7 @@ defineExpose({ centerContent, fitContent });
         class="mr-1"
         rounded="lg"
         title="Redo"
-        @click.native="undoRedoManager.redo()"
+        @click="undoRedoManager.redo()"
       ></v-btn>
     </div>
     <div

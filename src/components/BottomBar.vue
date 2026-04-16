@@ -1814,8 +1814,11 @@ const addElementUsingMouse = () => {
   appStore.mouseMode = MouseMode.ADD_ELEMENT;
 };
 
-// Constraint functions
-const constraintMode = ref<null | 'angle' | 'fix' | 'straighten'>(null);
+// Constraint functions — constraintMode lives in appStore so SVGViewer can check it
+const constraintMode = computed({
+  get: () => appStore.constraintMode,
+  set: (v) => { appStore.constraintMode = v; },
+});
 const constraintAngleInput = ref('90');
 
 const removeConstraint = (index: number) => {

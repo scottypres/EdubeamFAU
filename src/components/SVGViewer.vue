@@ -598,10 +598,21 @@ const TTWIDTH = 210;
 const onNodeClick = (e: MouseEvent) => {
   if (hasMoved(e)) return;
 
-  appStore.bottomBarTab = 'tab-nodes';
-
   const target = e.target as HTMLElement;
   const index = target.getAttribute('data-node-id') || '-1';
+
+  // In constraint mode, toggle node in selection2 without opening context menu
+  if (appStore.constraintMode) {
+    const idx = projectStore.selection2.nodes.indexOf(index);
+    if (idx === -1) {
+      projectStore.selection2.nodes.push(index);
+    } else {
+      projectStore.selection2.nodes.splice(idx, 1);
+    }
+    return;
+  }
+
+  appStore.bottomBarTab = 'tab-nodes';
 
   useProjectStore().selection.type = 'node';
   useProjectStore().selection.label = index;
@@ -624,10 +635,21 @@ const onNodeClick = (e: MouseEvent) => {
 const onElementClick = (e: MouseEvent) => {
   if (hasMoved(e)) return;
 
-  appStore.bottomBarTab = 'tab-elements';
-
   const target = e.target as HTMLElement;
   const index = target.getAttribute('data-element-id') || '-1';
+
+  // In constraint mode, toggle element in selection2 without opening context menu
+  if (appStore.constraintMode) {
+    const idx = projectStore.selection2.elements.indexOf(index);
+    if (idx === -1) {
+      projectStore.selection2.elements.push(index);
+    } else {
+      projectStore.selection2.elements.splice(idx, 1);
+    }
+    return;
+  }
+
+  appStore.bottomBarTab = 'tab-elements';
 
   let nx = target.getBoundingClientRect().left + target.getBoundingClientRect().width / 2 - TTWIDTH / 2;
 

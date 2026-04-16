@@ -155,6 +155,7 @@ export const useAppStore = defineStore(
     const bottomBarTab = ref(null);
 
     const mouseMode = ref<MouseMode>(MouseMode.NONE);
+    const constraintMode = ref<null | 'angle' | 'fix' | 'straighten'>(null);
     const mouse = ref({ x: 0, y: 0, sx: 0, sy: 0 });
 
     const tabs: Ref<
@@ -210,6 +211,7 @@ export const useAppStore = defineStore(
       tabs,
       bottomBarTab,
       mouseMode,
+      constraintMode,
       mouse,
       openSettings,
 

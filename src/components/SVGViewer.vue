@@ -975,29 +975,31 @@ const cancelDimensionPointDrag = () => {
   finishDimensionPointDrag(false);
 };
 
+/** Compute snapped SVG-world coordinates from a PointerEvent */
+const pointerToSvgCoords = (e: PointerEvent): { x: number; y: number } => {
+  const matrix = viewport.value!.getCTM() as DOMMatrix;
+  const leftTop = svg.value!.createSVGPoint();
+  leftTop.x = e.offsetX;
+  leftTop.y = e.offsetY;
+  const svgP1 = leftTop.matrixTransform(matrix.inverse());
+
+  const realStep = viewerStore.gridStep;
+  const snappedX = Math.round(svgP1.x / realStep) * realStep;
+  const snappedY = Math.round(svgP1.y / realStep) * realStep;
+
+  return {
+    x: viewerStore.snapToGrid ? snappedX : svgP1.x,
+    y: viewerStore.snapToGrid ? snappedY : svgP1.y,
+  };
+};
+
 const mouseMove = (e: PointerEvent) => {
   appStore.mouse.x = e.clientX;
   appStore.mouse.y = e.clientY;
 
-  const matrix = viewport.value!.getCTM() as DOMMatrix;
-
-  const leftTop = svg.value!.createSVGPoint();
-  leftTop.x = e.offsetX; //svgBB.left;
-  leftTop.y = e.offsetY; //svgBB.top;
-
-  const inv = matrix.inverse();
-  const svgP1 = leftTop.matrixTransform(inv);
-
-  const mXReal = svgP1.x; // * zoom;
-  const mYReal = svgP1.y; // * zoom;
-
-  const realStep = viewerStore.gridStep;
-
-  const snappedX = Math.round(mXReal / realStep) * realStep;
-  const snappedY = Math.round(mYReal / realStep) * realStep;
-
-  mouseXReal.value = viewerStore.snapToGrid ? snappedX : mXReal;
-  mouseYReal.value = viewerStore.snapToGrid ? snappedY : mYReal;
+  const coords = pointerToSvgCoords(e);
+  mouseXReal.value = coords.x;
+  mouseYReal.value = coords.y;
 
   if (pendingDimensionId && !isDraggingDimension() && hasMoved(e)) {
     if (startDimensionDrag(pendingDimensionId)) {
@@ -1057,6 +1059,19 @@ const onMouseDown = (e: PointerEvent) => {
     //this.svgPanZoom.disablePan();
     //mouseStartX = e.offsetX;
     //mouseStartY = e.offsetY;
+
+    // On touch devices, pointermove may not have fired before pointerdown,
+    // so mouseXReal/mouseYReal can be stale. Recompute from the event.
+    if (
+      appStore.mouseMode === MouseMode.ADD_NODE ||
+      appStore.mouseMode === MouseMode.ADD_ELEMENT ||
+      appStore.mouseMode === MouseMode.ADD_DIMLINE ||
+      appStore.mouseMode === MouseMode.PASTE_CLIPBOARD
+    ) {
+      const coords = pointerToSvgCoords(e);
+      mouseXReal.value = coords.x;
+      mouseYReal.value = coords.y;
+    }
 
     if (appStore.mouseMode === MouseMode.PASTE_CLIPBOARD) {
       appStore.mouseMode = MouseMode.NONE;
@@ -1726,6 +1741,21 @@ defineExpose({ centerContent, fitContent });
         @click.native="undoRedoManager.redo()"
       ></v-btn>
     </div>
+    <div
+      v-if="appStore.mouseMode === MouseMode.ADD_NODE || appStore.mouseMode === MouseMode.ADD_ELEMENT || appStore.mouseMode === MouseMode.ADD_DIMLINE"
+      style="position: absolute; z-index: 200; bottom: 24px; left: 50%; transform: translateX(-50%)"
+    >
+      <v-btn
+        color="error"
+        variant="elevated"
+        size="default"
+        rounded="pill"
+        prepend-icon="mdi-close"
+        @click="appStore.mouseMode = MouseMode.NONE; startNode = null;"
+      >
+        {{ appStore.mouseMode === MouseMode.ADD_NODE ? $t('nodes.addNode') : appStore.mouseMode === MouseMode.ADD_ELEMENT ? $t('elements.addElement') : $t('dimensioning.add_dimension') }}
+      </v-btn>
+    </div>
     <div id="viewerControls" class="text-black d-flex" style="position: absolute; z-index: 100; top: 24px; right: 24px">
       <v-btn
         icon="mdi:mdi-image-filter-center-focus"
@@ -1881,7 +1911,7 @@ defineExpose({ centerContent, fitContent });
       :on-update="onUpdate"
       :padding="128"
       :mobile-padding="32"
-      :touch="appStore.mouseMode !== MouseMode.MOVING"
+      :touch="appStore.mouseMode !== MouseMode.MOVING && appStore.mouseMode !== MouseMode.ADD_NODE && appStore.mouseMode !== MouseMode.ADD_ELEMENT && appStore.mouseMode !== MouseMode.ADD_DIMLINE"
       :can-fit-content="projectStore.solver.domain.nodes.size >= 2"
       style="overflow: visible; z-index: 50; min-height: 0"
     >

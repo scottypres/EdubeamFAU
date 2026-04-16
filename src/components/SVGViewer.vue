@@ -1092,7 +1092,7 @@ const onMouseDown = (e: PointerEvent) => {
   if (!skipClearingSelection) {
     projectStore.clearSelection();
 
-    if (e.button !== 2) projectStore.clearSelection2();
+    if (e.button !== 2 && !appStore.constraintMode) projectStore.clearSelection2();
   }
 
   if ('activeElement' in document) (document.activeElement as HTMLElement).blur();

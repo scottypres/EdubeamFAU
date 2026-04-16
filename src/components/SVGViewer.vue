@@ -788,6 +788,8 @@ let origX = 0;
 let origZ = 0;
 let finalX = 0;
 let finalZ = 0;
+let dragPointerStartX = 0;
+let dragPointerStartZ = 0;
 let dragDimension: { id: string; dimension: DimensionEntry; startDistance: number; lastDistance: number } | null = null;
 let dragDimensionPoint: {
   id: string;
@@ -1033,16 +1035,29 @@ const mouseMove = (e: PointerEvent) => {
       drgNode = item;
       origX = item.coords[0];
       origZ = item.coords[2];
+      dragPointerStartX = mouseXReal.value;
+      dragPointerStartZ = mouseYReal.value;
     }
 
-    useProjectStore().solver.domain.nodes.get(String(index))!.coords[0] = mouseXReal.value;
+    // Relative/trackpad-style: apply pointer delta to original node position
+    const deltaX = mouseXReal.value - dragPointerStartX;
+    const deltaZ = mouseYReal.value - dragPointerStartZ;
+    let newX = origX + deltaX;
+    let newZ = origZ + deltaZ;
 
-    useProjectStore().solver.domain.nodes.get(String(index))!.coords[2] = mouseYReal.value;
+    // Snap the final position if grid snapping is on
+    if (viewerStore.snapToGrid) {
+      const step = viewerStore.gridStep;
+      newX = Math.round(newX / step) * step;
+      newZ = Math.round(newZ / step) * step;
+    }
 
-    finalX = mouseXReal.value;
-    finalZ = mouseYReal.value;
+    item.coords[0] = newX;
+    item.coords[2] = newZ;
 
-    //useProjectStore().solver.loadCases[0].solved = false;
+    finalX = newX;
+    finalZ = newZ;
+
     solve();
   }
 };

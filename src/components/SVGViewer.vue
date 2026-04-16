@@ -1051,7 +1051,28 @@ const mouseMove = (e: PointerEvent) => {
     const index = intersected.value.index;
     if (index === null) return;
 
-    const item = useProjectStore().solver.domain.nodes.get(String(index))!;
+    const nodeLabel = String(index);
+    const item = useProjectStore().solver.domain.nodes.get(nodeLabel)!;
+    const constraints = useProjectStore().constraints;
+
+    // Check if this node is fixed by a constraint
+    const isNodeFixed = constraints.some(
+      (c) => c.type === 'fix' && (
+        (c.targetType === 'node' && c.target === nodeLabel) ||
+        (c.targetType === 'element' && (() => {
+          const el = useProjectStore().solver.domain.elements.get(c.target);
+          return el && el.nodes.includes(nodeLabel);
+        })())
+      )
+    );
+
+    if (isNodeFixed) {
+      // Don't allow moving fixed nodes
+      appStore.mouseMode = MouseMode.NONE;
+      intersected.value.type = null;
+      intersected.value.index = null;
+      return;
+    }
 
     if (drgNode === null) {
       drgNode = item;
@@ -1076,6 +1097,62 @@ const mouseMove = (e: PointerEvent) => {
 
     item.coords[0] = newX;
     item.coords[2] = newZ;
+
+    // Enforce straighten constraints on elements connected to this node
+    for (const c of constraints) {
+      if (c.type === 'straighten') {
+        const el = useProjectStore().solver.domain.elements.get(c.target) as Beam2D | undefined;
+        if (!el || !el.nodes.includes(nodeLabel)) continue;
+
+        const otherLabel = el.nodes[0] === nodeLabel ? el.nodes[1] : el.nodes[0];
+        const otherNode = useProjectStore().solver.domain.nodes.get(otherLabel)!;
+
+        if (c.orientation === 'vertical') {
+          item.coords[0] = otherNode.coords[0];
+          newX = item.coords[0];
+        } else {
+          item.coords[2] = otherNode.coords[2];
+          newZ = item.coords[2];
+        }
+      }
+    }
+
+    // Enforce angle constraints: if the moved node belongs to either element,
+    // reposition the second element's far node to maintain the constrained angle
+    for (const c of constraints) {
+      if (c.type !== 'angle') continue;
+
+      const el1 = useProjectStore().solver.domain.elements.get(c.elements[0]) as Beam2D | undefined;
+      const el2 = useProjectStore().solver.domain.elements.get(c.elements[1]) as Beam2D | undefined;
+      if (!el1 || !el2) continue;
+      if (!el1.nodes.includes(nodeLabel) && !el2.nodes.includes(nodeLabel)) continue;
+
+      const domain = useProjectStore().solver.domain;
+      const n1a = domain.nodes.get(el1.nodes[0])!;
+      const n1b = domain.nodes.get(el1.nodes[1])!;
+      const angle1 = Math.atan2(n1b.coords[2] - n1a.coords[2], n1b.coords[0] - n1a.coords[0]);
+
+      const n2a = domain.nodes.get(el2.nodes[0])!;
+      const n2b = domain.nodes.get(el2.nodes[1])!;
+      const len2 = Math.sqrt(
+        Math.pow(n2b.coords[0] - n2a.coords[0], 2) + Math.pow(n2b.coords[2] - n2a.coords[2], 2)
+      );
+      const angle2 = Math.atan2(n2b.coords[2] - n2a.coords[2], n2b.coords[0] - n2a.coords[0]);
+
+      // Snap to nearest multiple of the constraint angle
+      const currentDiff = ((angle2 - angle1) * 180) / Math.PI;
+      const snappedMultiple = Math.round(currentDiff / c.angle);
+      const angleRad = (c.angle * Math.PI) / 180;
+      const targetAngle = angle1 + snappedMultiple * angleRad;
+
+      n2b.coords[0] = n2a.coords[0] + len2 * Math.cos(targetAngle);
+      n2b.coords[2] = n2a.coords[2] + len2 * Math.sin(targetAngle);
+
+      if (nodeLabel === n2b.label) {
+        newX = n2b.coords[0];
+        newZ = n2b.coords[2];
+      }
+    }
 
     finalX = newX;
     finalZ = newZ;

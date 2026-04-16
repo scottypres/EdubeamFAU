@@ -1861,8 +1861,14 @@ const applyConstraint = () => {
       const len2 = Math.sqrt(
         Math.pow(n2b.coords[0] - n2a.coords[0], 2) + Math.pow(n2b.coords[2] - n2a.coords[2], 2)
       );
+      const angle2 = Math.atan2(n2b.coords[2] - n2a.coords[2], n2b.coords[0] - n2a.coords[0]);
 
-      const targetAngle = angle1 + (angle * Math.PI) / 180;
+      // Find the current angle difference and snap to the nearest multiple of the constraint angle
+      const currentDiff = ((angle2 - angle1) * 180) / Math.PI;
+      const angleRad = (angle * Math.PI) / 180;
+      const snappedMultiple = Math.round(currentDiff / angle);
+      const targetAngle = angle1 + snappedMultiple * angleRad;
+
       n2b.coords[0] = n2a.coords[0] + len2 * Math.cos(targetAngle);
       n2b.coords[2] = n2a.coords[2] + len2 * Math.sin(targetAngle);
       geometryChanged = true;

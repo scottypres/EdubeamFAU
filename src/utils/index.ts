@@ -607,6 +607,14 @@ export const deleteElement = (id: string) => {
     }
   }
 
+  // delete constraints referencing this element
+  useProjectStore().constraints = useProjectStore().constraints.filter((c) => {
+    if (c.type === 'angle') return c.elements[0] !== id && c.elements[1] !== id;
+    if (c.type === 'fix' && c.targetType === 'element') return c.target !== id;
+    if (c.type === 'straighten') return c.target !== id;
+    return true;
+  });
+
   // Remove from selections
   const index = useProjectStore().selection2.elements.indexOf(id);
   if (index > -1) useProjectStore().selection2.elements.splice(index, 1);
@@ -620,6 +628,12 @@ export const deleteElement = (id: string) => {
 export const deleteNode = (id: string) => {
   setUnsolved();
   useProjectStore().clearSelection();
+
+  // delete constraints referencing this node
+  useProjectStore().constraints = useProjectStore().constraints.filter((c) => {
+    if (c.type === 'fix' && c.targetType === 'node') return c.target !== id;
+    return true;
+  });
 
   // delete relevant dimensioning
   const removedDimensionIds: string[] = [];
